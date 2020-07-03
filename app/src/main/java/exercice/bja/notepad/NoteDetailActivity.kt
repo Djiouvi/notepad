@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.TextView
@@ -16,8 +17,10 @@ class NoteDetailActivity : AppCompatActivity() {
         val REQUEST_EDIT_NOTE = 1
         val EXTRA_NOTE = "note"
         val EXTRA_NOTE_INDEX = "noteIndex"
-    }
 
+        val ACTION_SAVE_NOTE = "ACTION_SAVE_NOTE"
+        val ACTION_DELETE_NOTE = "ACTION_DELETE_NOTE"
+    }
     lateinit var note: Note
     var noteIndex: Int = -1
 
@@ -52,16 +55,43 @@ class NoteDetailActivity : AppCompatActivity() {
                 saveNote()
                 true
             }
+            R.id.action_delete -> {
+                showConfirmDeleteNoteDialog()
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    fun showConfirmDeleteNoteDialog() {
+        val confirmDeleteNoteDialogFragment = ConfirmDeleteNoteDialogFragment(note.title)
+
+        confirmDeleteNoteDialogFragment.listener = object: ConfirmDeleteNoteDialogFragment.ConfirmDeleteDialogListener {
+            override fun onDialogPositiveClick() {
+                deleteNote()
+            }
+
+            override fun onDialogNegativeClick() {
+                Log.i("TAG", "Ne supprime pas")
+            }
+        }
+        confirmDeleteNoteDialogFragment.show(supportFragmentManager, "test")
+
     }
 
     fun saveNote() {
         note.title = titleView.text.toString()
         note.text = textView.text.toString()
 
-        intent = Intent()
+        intent = Intent(ACTION_SAVE_NOTE)
         intent.putExtra(EXTRA_NOTE, note)
+        intent.putExtra(EXTRA_NOTE_INDEX, noteIndex)
+        setResult(Activity.RESULT_OK, intent)
+        finish()
+    }
+
+    fun deleteNote() {
+        intent = Intent(ACTION_DELETE_NOTE)
         intent.putExtra(EXTRA_NOTE_INDEX, noteIndex)
         setResult(Activity.RESULT_OK, intent)
         finish()
